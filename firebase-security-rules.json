@@ -1,0 +1,42 @@
+{
+  "rules": {
+    "artifacts": {
+      "secure-exam-portal": {
+        "public": {
+          "data": {
+            "exams": {
+              ".read": true,
+              "$code": {
+                ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+              }
+            },
+            "registrations": {
+              ".read": "auth != null",
+              "$admNo": {
+                ".write": "auth != null"
+              }
+            },
+            "incidents": {
+              ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+              "$id": {
+                ".write": "auth != null"
+              }
+            },
+            "liveFeed": {
+              ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+              "$admNo": {
+                ".write": "auth != null"
+              }
+            }
+          }
+        }
+      }
+    },
+    "admins": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).child('role').val() === 'superadmin' || !root.child('admins').exists())"
+      }
+    }
+  }
+}

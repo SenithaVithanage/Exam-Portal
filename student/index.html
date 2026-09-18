@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Check-In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="flex items-center justify-center p-2 sm:p-4 min-h-screen no-select">
+
+    <video id="video-feed" autoplay playsinline muted class="hidden"></video>
+    <video id="screen-feed" autoplay playsinline muted class="hidden"></video>
+
+    <div id="main-card" class="w-full max-w-4xl ticket-card rounded-2xl overflow-hidden shadow-[0_20px_50px_-25px_rgba(24,34,51,0.45)] transition-all duration-500">
+        <div class="ticket-stub px-5 py-4 sm:px-7 sm:py-5 flex justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="seal">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E7DFC9" stroke-width="1.6"><path d="M12 2 3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6l-9-4Z"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>
+                </div>
+                <div>
+                    <p class="eyebrow text-[#B7BFCE]">Admission Pass</p>
+                    <h1 class="text-lg sm:text-xl font-display font-semibold text-[#F3F1E9] leading-tight">Exam Check-In</h1>
+                    <p id="student-display" class="hidden text-[#9DA8BC] text-[10px] font-data mt-1 tracking-wide"></p>
+                </div>
+            </div>
+            <div id="status-badge" class="hidden px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[9px] sm:text-[10px] font-data font-semibold tracking-wide border transition-all bg-indigo-500 border-indigo-400 text-white">
+                Syncing AI...
+            </div>
+        </div>
+        <div class="ticket-perf mx-5 sm:mx-7"></div>
+
+        <div id="content-padding" class="p-6 sm:p-12">
+            <div id="error-box" class="hidden mb-6 p-4 rounded-xl text-sm border flex items-center gap-3" style="background:#FBF1EF;color:var(--brick);border-color:#EAD3CE;">
+                <span aria-hidden="true">⚠</span> <span id="error-msg"></span>
+            </div>
+
+            <div id="auth-loader" class="text-center py-10 sm:py-20">
+                <div id="spinner" class="w-9 h-9 border-[3px] rounded-full loader mx-auto mb-4" style="border-color:#DEDACF;border-top-color:var(--teal);"></div>
+                <p id="loader-text" class="font-data text-xs" style="color:var(--ink-soft);">Initializing session…</p>
+                <button id="retry-auth-btn" onclick="window.location.reload()" class="hidden mt-6 btn-primary px-6 py-2.5 text-sm">Try again</button>
+            </div>
+
+            <div id="step-login" class="step-container max-w-sm mx-auto space-y-7">
+                <div class="text-center">
+                    <h2 class="text-2xl font-display font-semibold">Candidate check-in</h2>
+                    <p class="text-sm mt-1" style="color:var(--ink-soft)">Enter the admission number on your ticket.</p>
+                </div>
+                <div>
+                    <label class="eyebrow block mb-2">Admission number</label>
+                    <input type="text" id="admNo" class="field w-full p-4 outline-none text-center font-data font-semibold text-lg uppercase" placeholder="ADM-001" required>
+                </div>
+                <button id="login-btn" onclick="handleLogin()" class="w-full btn-primary py-4">Continue</button>
+            </div>
+
+            <div id="step-code" class="step-container max-w-sm mx-auto space-y-7">
+                <div class="text-center">
+                    <h2 class="text-2xl font-display font-semibold">Exam passcode</h2>
+                    <p class="text-sm mt-1" style="color:var(--ink-soft)">Enter today's sitting code.</p>
+                </div>
+                <input type="text" id="passCode" class="field w-full p-4 outline-none text-center font-data text-2xl tracking-[0.25em] uppercase" placeholder="••••" required>
+                <button id="verify-btn" onclick="handleCode()" class="w-full btn-primary py-4">Find my sitting</button>
+            </div>
+
+            <div id="step-permissions" class="step-container text-center max-w-md mx-auto py-2 sm:py-4">
+                <h2 class="text-2xl font-display font-semibold mb-5">Before you begin</h2>
+                <div class="notice-panel p-6 sm:p-7 mb-6 text-left">
+                    <h3 class="font-semibold mb-3 text-sm" style="color:var(--ink)">Consent &amp; supervision notice</h3>
+                    <ul class="text-[13px] space-y-2.5 list-disc pl-4 leading-relaxed" style="color:var(--ink-soft)">
+                        <li class="font-semibold" style="color:var(--brick)">This exam requires camera and microphone access for live proctoring.</li>
+                        <li>Periodic camera snapshots and a microphone activity level are sent to your proctor while the exam is active. Raw audio and video are not recorded or transmitted continuously.</li>
+                        <li>Mobile users: screen sharing is not required; camera monitoring is.</li>
+                        <li>Desktop users: sharing your <b>entire screen</b> is required.</li>
+                        <li>Exiting the page will <b>automatically submit</b> your exam.</li>
+                        <li>Leaving focus for more than a couple seconds is logged as a violation.</li>
+                        <li>A proctor may flag your session at any time if they observe a concern.</li>
+                    </ul>
+                </div>
+                <label class="flex items-start gap-3 text-left text-[12px] mb-6 max-w-sm mx-auto" style="color:var(--ink-soft)">
+                    <input type="checkbox" id="consent-check" class="mt-0.5 w-4 h-4 accent-[#1F6F63]">
+                    <span>I understand and consent to camera and microphone monitoring for the duration of this exam.</span>
+                </label>
+                <button id="perm-btn" onclick="requestPermissions()" disabled class="btn-primary px-10 py-4">Authorize &amp; start</button>
+            </div>
+
+            <div id="step-exam" class="step-container w-full">
+                <div class="mb-3 flex items-center gap-2 justify-center">
+                    <span class="eyebrow">Mic level</span>
+                    <div class="w-32 h-1.5 rounded-full overflow-hidden" style="background:#E3E0D5">
+                        <div id="mic-bar" class="mic-bar h-full bg-green-500" style="width:0%"></div>
+                    </div>
+                </div>
+                <div class="rounded-xl overflow-hidden relative iframe-wrapper w-full" style="background:#FBFAF6;border:1px solid var(--line);">
+                    <iframe id="exam-frame" src="" class="w-full h-full" frameborder="0"></iframe>
+                </div>
+                <div class="mt-4 flex justify-center">
+                    <button id="submit-btn" onclick="handleExitClick()" class="btn-danger px-8 py-3 text-xs tracking-wide">Exit application</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="warning-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-[#141B29]/85 backdrop-blur-md p-6">
+        <div class="p-8 sm:p-10 rounded-2xl max-w-md text-center shadow-2xl" style="background:var(--card);border-top:5px solid var(--brick);">
+            <div class="w-11 h-11 rounded-full mx-auto mb-4 flex items-center justify-center" style="background:#FBF1EF;color:var(--brick);">⚠</div>
+            <h2 class="text-xl font-display font-semibold mb-3" style="color:var(--brick)">Security warning</h2>
+            <p id="warning-reason" class="mb-8 text-sm leading-relaxed" style="color:var(--ink-soft)"></p>
+            <button onclick="dismissWarning()" class="w-full btn-danger py-4">Confirm &amp; resume</button>
+        </div>
+    </div>
+
+    <div id="flagged-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-[#141B29]/85 backdrop-blur-md p-6">
+        <div class="p-8 sm:p-10 rounded-2xl max-w-md text-center shadow-2xl" style="background:var(--card);border-top:5px solid var(--amber);">
+            <div class="w-11 h-11 rounded-full mx-auto mb-4 flex items-center justify-center" style="background:#FAF1E1;color:var(--amber);">🏳</div>
+            <h2 class="text-xl font-display font-semibold mb-3" style="color:var(--amber)">Flagged by proctor</h2>
+            <p id="flagged-reason" class="mb-8 text-sm leading-relaxed" style="color:var(--ink-soft)"></p>
+            <button onclick="dismissFlagged()" class="w-full py-4 rounded-[.7rem] font-semibold text-white" style="background:var(--amber);">Acknowledge</button>
+        </div>
+    </div>
+
+    <div id="exit-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-[#141B29]/85 backdrop-blur-md p-6">
+        <div class="p-8 sm:p-10 rounded-2xl max-w-md text-center shadow-2xl" style="background:var(--card);border-top:5px solid var(--ink);">
+            <h2 class="text-xl font-display font-semibold mb-3">Exit application?</h2>
+            <p class="mb-8 text-sm leading-relaxed" style="color:var(--ink-soft)">Are you sure you want to exit? Your exam session will be automatically submitted and the proctoring will end.</p>
+            <div class="flex gap-3">
+                <button onclick="closeExitModal()" class="flex-1 btn-ghost py-4">Cancel</button>
+                <button onclick="submitExam(true)" class="flex-1 btn-danger py-4">Confirm exit</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/security.js"></script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
